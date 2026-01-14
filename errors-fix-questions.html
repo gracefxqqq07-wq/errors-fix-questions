@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Glycolysis EFQ – Styled Interactive with Score</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f7f9fc;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 { color: #34495e; text-align: center; margin-top: 30px; }
+    #cardContainer {
+      margin-top: 20px;
+      width: 90%;
+      max-width: 700px;
+    }
+    .card {
+      background-color: #fff;
+      border-radius: 10px;
+      padding: 25px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.5s ease;
+    }
+    .card.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .keyword { font-weight: bold; color: #2E86C1; }
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    button {
+      padding: 8px 16px;
+      margin: 5px 0;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 15px;
+      background-color: #2980b9;
+      color: white;
+      transition: background-color 0.3s;
+    }
+    button:hover { background-color: #1c5980; }
+    .hidden { display: none; }
+    .correct { color: green; font-weight: bold; }
+    .incorrect { color: red; font-weight: bold; }
+    p { font-size: 16px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <h1>Glycolysis EFQ – Interactive Learning</h1>
+  <div id="cardContainer"></div>
+
+  <script>
+    const efqCards = [
+      {
+        title: "Card 1: Glycolysis requires oxygen?",
+        error: "❌ Error: Glycolysis requires oxygen because it is part of aerobic respiration.",
+        correctExplanation: "✅ Correct: Glycolysis is <span class='keyword'>anaerobic</span>, occurs in the <span class='keyword'>cytoplasm</span>, and can occur with or without <span class='keyword'>oxygen</span>.",
+        checkQuestion: "❓ Check Question: Why can glycolysis continue when oxygen is absent?",
+        checkAnswer: "Answer: Glycolysis is <span class='keyword'>anaerobic</span> and occurs in the <span class='keyword'>cytoplasm</span>, so it does not require <span class='keyword'>oxygen</span>.",
+        keywords: ["anaerobic","cytoplasm","oxygen"],
+        checkKeywords: ["anaerobic","cytoplasm","oxygen"]
+      },
+      {
+        title: "Card 2: ATP production?",
+        error: "❌ Error: One molecule of glucose only produces 2 ATP energy through glycolysis.",
+        correctExplanation: "✅ Correct: Each glucose produces <span class='keyword'>2 net ATP</span>. Two glucose molecules produce <span class='keyword'>4 net ATP</span>.",
+        checkQuestion: "❓ Check Question: How many ATPs are produced by two molecules of glucose via glycolysis?",
+        checkAnswer: "Answer: <span class='keyword'>4 net ATP</span>",
+        keywords: ["2 net atp","4 net atp","4"], 
+        checkKeywords: ["4 net atp","4"]
+      },
+      {
+        title: "Card 3: DHAP and G3P?",
+        error: "❌ Error: Energy investment phase produce 1 dihydroxyacetone phosphate and 2 glyceraldehyde 3-phosphate.",
+        correctExplanation: "✅ Correct: Energy investment phase forms 1 <span class='keyword'>DHAP</span> and 1 <span class='keyword'>G3P</span>. <span class='keyword'>DHAP</span> is converted to <span class='keyword'>G3P</span>, giving 2 G3P for the payoff phase.",
+        checkQuestion: "❓ Check Question: Why must DHAP be converted into G3P before glycolysis can continue?",
+        checkAnswer: "Answer: Only <span class='keyword'>G3P</span> can enter the <span class='keyword'>payoff phase</span>, so <span class='keyword'>DHAP</span> must be converted.",
+        keywords: ["dhap","g3p","glyceraldehyde 3-phosphate","payoff phase"], 
+        checkKeywords: ["dhap","g3p","glyceraldehyde 3-phosphate","payoff phase"]
+      },
+      {
+        title: "Card 4: NADH production?",
+        error: "❌ Error: One molecule of glucose produces one NADH through glycolysis.",
+        correctExplanation: "✅ Correct: 2 <span class='keyword'>NADH</span> are produced during glycolysis.",
+        checkQuestion: "❓ Check Question: Which step produces NADH?",
+        checkAnswer: "Answer: <span class='keyword'>NADH</span> is produced during the oxidation of <span class='keyword'>glyceraldehyde-3-phosphate</span> to <span class='keyword'>1,3-bisphosphoglycerate</span> by <span class='keyword'>glyceraldehyde-3-phosphate dehydrogenase</span>.",
+        keywords: ["2 nadh","glyceraldehyde-3-phosphate","1,3-bisphosphoglycerate"], 
+        checkKeywords: ["2 nadh","glyceraldehyde-3-phosphate","1,3-bisphosphoglycerate"]
+      }
+    ];
+
+    let currentCard = 0;
+    let totalCards = efqCards.length;
+    let correctErrorCount = 0;
+    let correctCheckCount = 0;
+
+    function showCard(index) {
+      const card = efqCards[index];
+      const container = document.getElementById("cardContainer");
+      container.innerHTML = `
+        <div class="card show">
+          <h2>${card.title}</h2>
+          <p>${card.error}</p>
+          <input type="text" id="userAnswer" placeholder="Type your answer here">
+          <button onclick="checkAnswer()">Submit Answer</button>
+          <p id="result" class="hidden"></p>
+          <p id="correct" class="hidden"></p>
+
+          <p id="checkQ" class="hidden">${card.checkQuestion}</p>
+          <input type="text" id="checkUserAnswer" class="hidden" placeholder="Type your answer here">
+          <button id="checkSubmit" class="hidden" onclick="checkCheckAnswer()">Submit Check Question</button>
+          <p id="checkResult" class="hidden"></p>
+          <p id="checkAns" class="hidden"></p>
+
+          <button id="nextBtn" class="hidden" onclick="nextCard()">Next Card</button>
+        </div>
+      `;
+    }
+
+    function checkAnswer() {
+      const userAns = document.getElementById("userAnswer").value.trim().toLowerCase();
+      const result = document.getElementById("result");
+      const correct = document.getElementById("correct");
+      const checkQ = document.getElementById("checkQ");
+      const checkInput = document.getElementById("checkUserAnswer");
+      const checkSubmit = document.getElementById("checkSubmit");
+
+      const keywords = efqCards[currentCard].keywords;
+      const isCorrect = keywords.some(k => userAns.includes(k));
+      if(isCorrect) correctErrorCount++;
+
+      result.textContent = isCorrect ? "✅ Correct!" : "❌ Incorrect!";
+      result.className = isCorrect ? "correct" : "incorrect";
+      result.classList.remove("hidden");
+
+      correct.innerHTML = efqCards[currentCard].correctExplanation;
+      correct.classList.remove("hidden");
+
+      // show Check Question
+      checkQ.classList.remove("hidden");
+      checkInput.classList.remove("hidden");
+      checkSubmit.classList.remove("hidden");
+    }
+
+    function checkCheckAnswer() {
+      const checkUserAns = document.getElementById("checkUserAnswer").value.trim().toLowerCase();
+      const checkResult = document.getElementById("checkResult");
+      const checkAns = document.getElementById("checkAns");
+      const nextBtn = document.getElementById("nextBtn");
+
+      const checkKeywords = efqCards[currentCard].checkKeywords;
+      const isCorrect = checkKeywords.some(k => checkUserAns.includes(k));
+      if(isCorrect) correctCheckCount++;
+
+      checkResult.textContent = isCorrect ? "✅ Correct!" : "❌ Incorrect!";
+      checkResult.className = isCorrect ? "correct" : "incorrect";
+      checkResult.classList.remove("hidden");
+
+      checkAns.innerHTML = efqCards[currentCard].checkAnswer;
+      checkAns.classList.remove("hidden");
+      nextBtn.classList.remove("hidden");
+    }
+
+    function nextCard() {function nextCard() {
+  currentCard++;
+  if(currentCard < efqCards.length){
+    showCard(currentCard);
+  } else {
+    const totalScore = correctErrorCount + correctCheckCount;
+    const totalPossible = totalCards * 2;
+    const percentage = Math.round((totalScore / totalPossible) * 100);
+
+    let feedback = "";
+    if(percentage >= 90) feedback = "Excellent! You mastered Glycolysis EFQ!";
+    else if(percentage >= 70) feedback = "Good job! Review a few concepts.";
+    else if(percentage >= 50) feedback = "Not bad, but more practice needed.";
+    else feedback = "Keep practicing! Review the concepts carefully.";
+
+    document.getElementById("cardContainer").innerHTML = `
+      <h2>🎉 You have completed all EFQ cards!</h2>
+      <p>Your score:</p>
+      <p>Error Correction: ${correctErrorCount} / ${totalCards}</p>
+      <p>Check Question: ${correctCheckCount} / ${totalCards}</p>
+      <p><strong>Total: ${totalScore} / ${totalPossible} (${percentage}%)</strong></p>
+      <p><em>${feedback}</em></p>
+    `;
+  }
+}
+
+    }
+
+    showCard(currentCard);
+  </script>
+</body>
+</html>
